@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  @@index([name])
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  name                String?
+  email               String?              @unique
+  emailVerified       DateTime?
+  image               String?
+  password            String?
+  accounts            Account[]
+  calendarConnections CalendarConnection[]
+  dayNotes            DayNote[]
+  meetings            Meeting[]
+  notes               Note[]
+  posts               Post[]
+  sessions            Session[]
+  todos               Todo[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  transcript  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  attendees   String?
+  calendarId  String?
+  externalId  String?
+  isRecurring Boolean  @default(false)
+  location    String?
+  organizer   String?
+  createdBy   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes       Note[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  meetingId String?
+  dayNoteId String?
+  timeRef   DateTime @default(now())
+  day       DayNote? @relation(fields: [dayNoteId], references: [id])
+  meeting   Meeting? @relation(fields: [meetingId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DayNote {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  summary   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     Note[]
+  todos     Todo[]
+}
+
+model Todo {
+  id         String   @id @default(cuid())
+  content    String
+  completed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  dayNoteId  String?
+  persistent Boolean  @default(false)
+  dayNote    DayNote? @relation(fields: [dayNoteId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dayNoteId])
+  @@index([userId, persistent, completed])
+}
+
+model CalendarConnection {
+  id           String    @id @default(cuid())
+  provider     String
+  accountEmail String
+  accountName  String?
+  refreshToken String
+  accessToken  String?
+  tokenExpiry  DateTime?
+  calendarId   String?
+  isActive     Boolean   @default(true)
+  lastSynced   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, accountEmail])
+}
