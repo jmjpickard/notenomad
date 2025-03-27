@@ -23,7 +23,7 @@ const config = {
     // Optimize server build
     serverMinification: true,
     // Pack related packages together
-    optimizePackageImports: ["@huggingface/transformers", "onnxruntime-web"],
+    optimizePackageImports: ["onnxruntime-web"],
   },
   webpack: (config, { isServer }) => {
     // Disable node-specific modules
@@ -56,7 +56,6 @@ const config = {
         ...(config.externals || []),
         "onnxruntime-web",
         "onnxruntime-node",
-        "@huggingface/transformers",
       ];
     }
 
