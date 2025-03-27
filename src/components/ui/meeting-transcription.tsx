@@ -438,7 +438,7 @@ export const MeetingTranscription = ({
 
       // Track if we've detected audio during the test
       let hasDetectedSound = false;
-      let testStartTime = Date.now();
+      const testStartTime = Date.now();
       const TEST_DURATION = 3000; // 3 seconds test
 
       // Set a timeout to end the test after 3 seconds
@@ -695,12 +695,12 @@ export const MeetingTranscription = ({
       }
 
       // Store stream for cleanup
-      screenStreamRef.current = combinedStream as MediaStream;
+      screenStreamRef.current = combinedStream;
 
       // For Arc browser or when using transformers.js explicitly
       if (isArcBrowser.current || !usingWebSpeechAPI) {
         // Use Transformers.js for transcription via recording
-        const mediaRecorder = new MediaRecorder(combinedStream as MediaStream);
+        const mediaRecorder = new MediaRecorder(combinedStream);
         screenMediaRecorderRef.current = mediaRecorder;
 
         mediaRecorder.addEventListener("dataavailable", (event) => {
@@ -736,7 +736,7 @@ export const MeetingTranscription = ({
         mediaRecorder.start(1000);
       } else {
         // Use Web Speech API for transcription with combined audio
-        startWebSpeechTranscription(combinedStream as MediaStream);
+        startWebSpeechTranscription(combinedStream);
       }
     } catch (error: unknown) {
       console.error("Permission error:", error);
@@ -785,7 +785,7 @@ export const MeetingTranscription = ({
 
       // Add custom properties that might help with Arc
       try {
-        (recognition as any).interimResultsTimeout = 5000;
+        recognition.interimResultsTimeout = 5000;
       } catch (e) {
         console.log("Could not set custom property", e);
       }
@@ -1745,10 +1745,10 @@ export const MeetingTranscription = ({
               </p>
               <ul className="list-disc pl-5 text-[#607D8B] dark:text-slate-400">
                 <li>
-                  Make sure to enable "Share audio" in the screen sharing dialog
+                  Make sure to enable &quot;Share audio&quot; in the screen sharing dialog
                 </li>
                 <li>Speak clearly into your microphone</li>
-                <li>Click "Stop Recording" when finished</li>
+                <li>Click &quot;Stop Recording&quot; when finished</li>
               </ul>
             </div>
 
@@ -1774,7 +1774,7 @@ export const MeetingTranscription = ({
                 </p>
                 <ul className="list-disc pl-5 text-[#607D8B] dark:text-slate-400">
                   <li>
-                    Ensure 'Share system audio' is checked in the sharing dialog
+                    Ensure &apos;Share system audio&apos; is checked in the sharing dialog
                   </li>
                   <li>Play some audio on your device to test detection</li>
                   <li>Check that your microphone is not muted</li>

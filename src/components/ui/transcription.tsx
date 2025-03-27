@@ -230,7 +230,7 @@ export default function Transcription() {
       const arrayBuffer = await audioBlob.arrayBuffer();
 
       const result = await transcriber(new Uint8Array(arrayBuffer));
-      setTranscription(result.text);
+      setTranscription(result.text as string);
     } catch (error) {
       console.error("Transcription error:", error);
       setErrorMessage("Error during transcription. Please try again.");
