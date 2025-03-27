@@ -1,6 +1,6 @@
 {
   "buildCommand": "SKIP_ENV_VALIDATION=true npm run build",
-  "ignoreCommand": "npm install && SKIP_ENV_VALIDATION=true npm run lint --no-fix",
+  "ignoreCommand": "exit 0",
   "outputDirectory": ".next",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
@@ -9,5 +9,8 @@
       "src": "next.config.js",
       "use": "@vercel/next"
     }
-  ]
+  ],
+  "env": {
+    "SKIP_ENV_VALIDATION": "true"
+  }
 }

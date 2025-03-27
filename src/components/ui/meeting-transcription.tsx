@@ -63,8 +63,8 @@ export const MeetingTranscription = ({
     useState(false);
   const [micPermissionGranted, setMicPermissionGranted] = useState(false);
   const isArcBrowser = useRef(
-    /Arc/.test(navigator.userAgent) ||
-      (/Chrome/.test(navigator.userAgent) && /Apple/.test(navigator.userAgent)),
+    navigator.userAgent.includes("Arc") ||
+      (navigator.userAgent.includes("Chrome") && navigator.userAgent.includes("Apple")),
   );
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [isMicrophoneTesting, setIsMicrophoneTesting] = useState(false);
