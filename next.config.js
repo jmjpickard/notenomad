@@ -6,7 +6,7 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
-  transpilePackages: ["@huggingface/transformers", "onnxruntime-web"],
+  transpilePackages: ["onnxruntime-web"],
   reactStrictMode: true,
   typescript: {
     // Type checking happens separately during the lint step
