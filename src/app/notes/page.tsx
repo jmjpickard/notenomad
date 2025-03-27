@@ -1,15 +1,7 @@
-"use client";
-
 import { redirect } from "next/navigation";
 import { auth } from "~/lib/auth";
-import type { Metadata } from "next";
 import { MinimalSidebar } from "../_components/Sidebar/MinimalSidebar";
 import { FlowingNotesContent } from "../_components/FlowingNotesContent";
-
-export const metadata: Metadata = {
-  title: "Daily Notes | NoteNomad",
-  description: "Organise your day with notes, tasks and meetings in one place",
-};
 
 /**
  * Notes page component that handles authentication and renders the day view layout
