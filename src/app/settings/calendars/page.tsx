@@ -20,7 +20,7 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function CalendarSettings() {
-  const router = useRouter(); // Router will be used in the future
+  const _router = useRouter(); // Router will be used in the future
   const [isSyncing, setIsSyncing] = useState(false);
 
   // Fetch calendar connections

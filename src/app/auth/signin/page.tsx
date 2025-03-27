@@ -83,7 +83,7 @@ const SignInPage = () => {
       else {
         router.push("/auth/verify-request");
       }
-    } catch (err) {
+    } catch (_err) {
       setAuthError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -111,7 +111,7 @@ const SignInPage = () => {
         setAuthError("Invalid email or password");
       }
       // NextAuth will handle redirection to notes
-    } catch (err) {
+    } catch (_err) {
       setAuthError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

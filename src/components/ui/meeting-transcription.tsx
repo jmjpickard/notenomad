@@ -586,7 +586,7 @@ export const MeetingTranscription = ({
     }
 
     // Preserve any existing transcription
-    const existingText = transcriptionTextRef.current;
+    const _existingText = transcriptionTextRef.current;
 
     // Add a note about the switch
     transcriptionTextRef.current +=
@@ -871,9 +871,9 @@ export const MeetingTranscription = ({
       // Process all results
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        if (!result || !result[0]) continue;
+        if (!result?.[0]) continue;
 
-        const transcript = result[0].transcript || "";
+        const transcript = result[0]?.transcript || "";
 
         if (result.isFinal) {
           finalTranscript += transcript + " ";
@@ -997,9 +997,9 @@ export const MeetingTranscription = ({
       // Process all results
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        if (!result || !result[0]) continue;
+        if (!result?.[0]) continue;
 
-        const transcript = result[0].transcript || "";
+        const transcript = result[0]?.transcript || "";
 
         if (result.isFinal) {
           finalTranscript += transcript + " ";
