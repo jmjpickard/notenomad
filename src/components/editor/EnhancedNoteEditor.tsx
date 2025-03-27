@@ -102,7 +102,7 @@ export const EnhancedNoteEditor = ({
       else if (id.startsWith("timeline-note-")) {
         const noteId = id.replace("timeline-note-", "");
         void saveDayNoteMutation.mutateAsync({
-          date: formattedDate as string,
+          date: formattedDate!,
           content: noteContent,
           noteId,
         });
