@@ -11,7 +11,9 @@ export const env = createEnv({
       process.env.NODE_ENV === "production"
         ? z.string()
         : z.string().optional(),
-    AUTH_URL: z.string().url(),
+    AUTH_URL: process.env.NODE_ENV === "production"
+      ? z.string().url()
+      : z.string().url().default("http://localhost:3000"),
     RESEND_API_KEY: z.string().min(1),
     EMAIL_FROM: z.string().email(),
     DATABASE_URL: z.string().url(),
