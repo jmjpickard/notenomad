@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "ignoreCommand": "npm run lint --no-fix",
+  "ignoreCommand": "npm install && npm run lint --no-fix",
   "outputDirectory": ".next",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
