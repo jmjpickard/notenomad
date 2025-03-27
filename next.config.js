@@ -42,6 +42,7 @@ const config = {
       config.externals = [
         ...(config.externals || []),
         "onnxruntime-web",
+        "onnxruntime-node",
         "@huggingface/transformers",
       ];
     }
@@ -54,6 +55,8 @@ const config = {
 
     return config;
   },
+  // Add this section to optimize output size
+  output: "standalone",
 };
 
 export default config;
