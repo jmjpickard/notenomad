@@ -9,7 +9,7 @@ import { DayNoteEditor, MeetingNoteEditor } from "~/components/editor";
  * Props for the NoteItem component
  */
 interface NoteItemProps {
-  id: string;
+  _id: string;
   type: "day" | "meeting";
   title?: string;
   preview: string;
@@ -23,7 +23,7 @@ interface NoteItemProps {
  * A component that displays a note preview and allows in-place editing
  */
 export const NoteItem = ({
-  id,
+  _id,
   type,
   title,
   preview,

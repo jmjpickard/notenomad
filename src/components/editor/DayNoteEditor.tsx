@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import { useTheme } from "next-themes";
 import { BlockNoteEditor } from "./BlockNoteEditor";
@@ -60,7 +60,7 @@ export const DayNoteEditor = ({
     };
 
     if (!isInitialized) {
-      initialize();
+      void initialize();
     }
   }, [isInitialized, initializeNote]);
 
@@ -92,7 +92,7 @@ export const DayNoteEditor = ({
       return Promise.resolve();
     } catch (error) {
       console.error("Failed to save day note:", error);
-      return Promise.reject(error);
+      return Promise.reject(new Error(String(error)));
     }
   };
 
@@ -131,15 +131,21 @@ export const DayNoteEditor = ({
   }, []);
 
   // Register the save function if provided
+  // Define the save function with useCallback to avoid dependency issues
+  const saveFunction = useCallback(
+    async (explicitContent?: string) => {
+      if (explicitContent) {
+        return handleSave(explicitContent);
+      }
+      // Use the tracked content reference instead of localStorage
+      return saveNote(currentContentRef.current);
+    },
+    [handleSave, saveNote]
+  );
+
   useEffect(() => {
     if (registerSaveFunction && !isLoading) {
-      registerSaveFunction(async (explicitContent?: string) => {
-        if (explicitContent) {
-          return handleSave(explicitContent);
-        }
-        // Use the tracked content reference instead of localStorage
-        return saveNote(currentContentRef.current);
-      });
+      registerSaveFunction(saveFunction);
     }
 
     // Reset when initialContent changes to prevent persisting between notes
@@ -148,7 +154,7 @@ export const DayNoteEditor = ({
         registerSaveFunction(async () => Promise.resolve());
       }
     };
-  }, [registerSaveFunction, isLoading, saveNote, initialContent]);
+  }, [registerSaveFunction, isLoading, initialContent, saveFunction]);
 
   if (isLoading) {
     return (

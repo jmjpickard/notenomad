@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { format, isWithinInterval, isSameDay } from "date-fns";
+import { useState, useEffect } from "react";
+import { format, isWithinInterval } from "date-fns";
 import {
   Clock,
   MapPin,
@@ -12,7 +12,6 @@ import {
   Calendar,
   VideoIcon,
   X,
-  Save,
   Mic,
   FileText,
   Loader2,
@@ -58,6 +57,11 @@ interface TimelineMeetingItemProps {
   onNoteSaved?: (actionOrStartNewNote?: "delete" | "save" | boolean) => void;
 }
 
+interface Attendee {
+  email: string;
+  [key: string]: unknown;
+}
+
 /**
  * Component that displays a meeting in the timeline
  */
@@ -77,7 +81,6 @@ export const TimelineMeetingItem = ({
 }: TimelineMeetingItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCurrentMeeting, setIsCurrentMeeting] = useState(false);
-  const [isToday, setIsToday] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const { resolvedTheme } = useTheme();
@@ -96,8 +99,8 @@ export const TimelineMeetingItem = ({
   const saveMeetingNoteMutation = api.notes.saveMeetingNote.useMutation({
     onSuccess: () => {
       // Invalidate queries to refresh data
-      trpc.notes.getMeetingNote.invalidate({ meetingId: id });
-      trpc.meetings.getMeetingsByDate.invalidate({
+      void trpc.notes.getMeetingNote.invalidate({ meetingId: id });
+      void trpc.meetings.getMeetingsByDate.invalidate({
         date: format(date, "yyyy-MM-dd"),
       });
       toast.success("Meeting note saved");
@@ -111,7 +114,7 @@ export const TimelineMeetingItem = ({
     onSuccess: () => {
       toast.success("Transcription saved successfully");
       setIsTranscribing(false);
-      trpc.meetings.getMeetingsByDate.invalidate({
+      void trpc.meetings.getMeetingsByDate.invalidate({
         date: format(date, "yyyy-MM-dd"),
       });
     },
@@ -125,7 +128,7 @@ export const TimelineMeetingItem = ({
     onSuccess: () => {
       toast.success("Transcription deleted");
       setShowTranscript(false);
-      trpc.meetings.getMeetingsByDate.invalidate({
+      void trpc.meetings.getMeetingsByDate.invalidate({
         date: format(date, "yyyy-MM-dd"),
       });
     },
@@ -150,9 +153,13 @@ export const TimelineMeetingItem = ({
   const duration = `${formattedStartTime} - ${formattedEndTime}`;
 
   // Parse attendees from string to array
-  const attendeeList = attendees
-    ? JSON.parse(attendees).map((attendee: any) => attendee.email || attendee)
-    : [];
+  const attendeeList = attendees ? (JSON.parse(attendees) as Attendee[]) : [];
+
+  const attendeeEmails: string[] = attendeeList.map((attendee) =>
+    typeof attendee === "object" && "email" in attendee
+      ? attendee.email
+      : String(attendee),
+  );
 
   /**
    * Formats a list of attendees for display
@@ -287,37 +294,34 @@ export const TimelineMeetingItem = ({
   };
 
   /**
-   * Handles saving a new note or updating an existing note
+   * Saves a note to the database
    */
-  const handleSaveNote = async (content?: string) => {
+  const handleSaveNote = async (noteContent: string, noteId?: string) => {
+    if (!noteContent) {
+      return Promise.reject(new Error("Note content is required"));
+    }
+
     try {
-      // Use the provided content or get it from the store
-      const editorId = editingNoteId || newNoteId;
-      const validContent = content || getContent(editorId);
-
-      if (
-        !validContent ||
-        validContent === '[{"type":"paragraph","content":[]}]'
-      ) {
-        toast.info("Cannot save empty note");
-        return Promise.resolve();
-      }
-
-      // Save the meeting note via API
       await saveMeetingNoteMutation.mutateAsync({
         meetingId: id,
-        content: validContent,
+        content: noteContent,
       });
 
-      // Update the store to reflect saved state
-      markAsSaved(editorId);
+      markAsSaved(noteId ?? newNoteId);
 
-      // Update UI state
-      handleNoteSaved();
-      return Promise.resolve();
+      // If this is a new note, clear the form and close it
+      if (!noteId) {
+        setIsAddingNote(false);
+      } else {
+        setEditingNoteId(null);
+      }
+
+      if (onNoteSaved) {
+        onNoteSaved("save");
+      }
     } catch (error) {
-      toast.error("Failed to save meeting note");
-      return Promise.reject(error);
+      console.error("Error saving note:", error);
+      toast.error("Failed to save meeting note. Please try again.");
     }
   };
 
@@ -340,12 +344,17 @@ export const TimelineMeetingItem = ({
     }
   };
 
-  // Register the save function for the parent component
   useEffect(() => {
-    if (registerSaveFunction && (isAddingNote || editingNoteId)) {
-      registerSaveFunction(handleSaveNote);
+    // Register save function if provided by parent
+    if (registerSaveFunction) {
+      registerSaveFunction(async (content) => {
+        const noteContent = content ?? getContent(newNoteId);
+        if (noteContent) {
+          await handleSaveNote(noteContent);
+        }
+      });
     }
-  }, [registerSaveFunction, isAddingNote, editingNoteId]);
+  }, [registerSaveFunction, newNoteId, getContent, handleSaveNote]);
 
   // Check if this meeting is currently happening
   useEffect(() => {
@@ -353,7 +362,6 @@ export const TimelineMeetingItem = ({
       const now = new Date();
       const isNow = isWithinInterval(now, { start: startTime, end: endTime });
       setIsCurrentMeeting(isNow);
-      setIsToday(isSameDay(now, startTime));
     };
 
     checkCurrentMeeting();
@@ -421,7 +429,7 @@ export const TimelineMeetingItem = ({
 
         // Give the database a moment to update
         setTimeout(() => {
-          refetchTranscript().finally(() => {
+          void refetchTranscript().finally(() => {
             setIsTranscriptLoading(false);
           });
         }, 500);
@@ -441,9 +449,9 @@ export const TimelineMeetingItem = ({
     setIsTranscriptLoading(true);
 
     // Always fetch fresh data when viewing transcript
-    trpc.meetings.getTranscript.invalidate({ meetingId: id });
+    void trpc.meetings.getTranscript.invalidate({ meetingId: id });
 
-    refetchTranscript().finally(() => {
+    void refetchTranscript().finally(() => {
       setIsTranscriptLoading(false);
     });
   };
@@ -544,10 +552,10 @@ export const TimelineMeetingItem = ({
               </div>
             )}
 
-            {attendeeList.length > 0 && (
+            {attendeeEmails.length > 0 && (
               <div className="flex items-center text-sm text-[#424242] dark:text-slate-300">
                 <Users className="mr-2 h-4 w-4 text-[#607D8B]" />
-                <span>{formatAttendees(attendeeList)}</span>
+                <span>{formatAttendees(attendeeEmails)}</span>
               </div>
             )}
           </div>
@@ -727,41 +735,14 @@ export const TimelineMeetingItem = ({
           >
             <DialogHeader>
               <DialogTitle>Meeting Transcription</DialogTitle>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Capture and transcribe audio from your meeting. When prompted,
-                select the tab or window with your meeting and make sure to
-                check "Share audio".
-              </p>
-            </DialogHeader>
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/30">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-amber-400 dark:text-amber-500"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-amber-800 dark:text-amber-600">
-                    Important
-                  </h3>
-                  <div className="mt-1 text-sm text-amber-700 dark:text-amber-500">
-                    <p>
-                      You must enable "Share audio" when selecting your screen
-                      to capture the meeting audio. Otherwise, no transcription
-                      will be produced.
-                    </p>
-                  </div>
-                </div>
+              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                <p>
+                  Click &quot;Select Source&quot; and choose the tab or window
+                  where your meeting is happening. Make sure to check
+                  &quot;Share audio&quot; before clicking Share.
+                </p>
               </div>
-            </div>
+            </DialogHeader>
             <MeetingTranscription
               onTranscriptionComplete={handleTranscriptionComplete}
               onCancel={handleCancelTranscription}

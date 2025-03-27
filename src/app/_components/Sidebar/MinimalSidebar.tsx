@@ -97,8 +97,8 @@ export function MinimalSidebar({ user }: MinimalSidebarProps) {
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-10 w-10 cursor-pointer border border-[#E0E0E0] dark:border-slate-700">
                   <AvatarImage
-                    src={user.image || undefined}
-                    alt={user.name || "User"}
+                    src={user.image ?? undefined}
+                    alt={user.name ?? "User"}
                   />
                   <AvatarFallback className="bg-[#4A90E2] text-white">
                     {initials}
@@ -108,7 +108,7 @@ export function MinimalSidebar({ user }: MinimalSidebarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem className="font-medium">
-                {user.name || "User"}
+                {user.name ?? "User"}
               </DropdownMenuItem>
               <form action="/api/auth/signout" method="post">
                 <DropdownMenuItem className="gap-2 text-[#E07A5F]" asChild>

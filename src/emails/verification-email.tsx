@@ -13,7 +13,7 @@ import {
 
 interface VerificationEmailProps {
   verificationLink: string;
-  host: string;
+  _host: string;
 }
 
 /**
@@ -21,7 +21,7 @@ interface VerificationEmailProps {
  */
 const VerificationEmail = ({
   verificationLink,
-  host,
+  _host,
 }: VerificationEmailProps) => {
   return (
     <Html>

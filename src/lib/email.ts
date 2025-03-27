@@ -15,7 +15,7 @@ export const sendMagicLinkEmail = async (email: string, magicLink: string) => {
     subject: "Your NoteMomad Magic Link",
     react: MagicLinkEmail({
       magicLink,
-      host: env.AUTH_URL,
+      _host: env.AUTH_URL,
     }),
   });
 
@@ -38,7 +38,7 @@ export const sendVerificationEmail = async (
     subject: "Verify your NoteMomad account",
     react: VerificationEmail({
       verificationLink,
-      host: env.AUTH_URL,
+      _host: env.AUTH_URL,
     }),
   });
 

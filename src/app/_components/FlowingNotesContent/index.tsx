@@ -2,13 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { addDays, subDays, format } from "date-fns";
-import { DayHeader } from "../DayHeader";
-import { Card } from "~/components/ui/card";
-import { api } from "~/trpc/react";
-import { useTheme } from "next-themes";
-import { useNoteStore } from "~/store/noteStore";
 import { toast } from "sonner";
-import { TimelineView } from "~/components/notes";
+import { DayHeader } from "../DayHeader";
+import { TimelineView } from "~/components/notes/TimelineView";
+import { api } from "~/trpc/react";
+import { useNoteStore } from "~/store/noteStore";
 
 /**
  * Component that implements the "single flowing note" concept that combines meetings and notes
@@ -16,12 +14,10 @@ import { TimelineView } from "~/components/notes";
 export function FlowingNotesContent() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [isAddingNote, setIsAddingNote] = useState(false);
-  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
-  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(
+  const [_editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [_selectedMeetingId, setSelectedMeetingId] = useState<string | null>(
     null,
   );
-  const { resolvedTheme } = useTheme();
-  const theme = resolvedTheme === "dark" ? "dark" : "light";
 
   // Access the note store
   const { getContent, setNoteContent } = useNoteStore();
@@ -64,18 +60,13 @@ export function FlowingNotesContent() {
     },
   });
 
-  // Function to format time from Date objects
-  const formatTimeRange = (startTime: Date, endTime: Date) => {
-    return `${format(startTime, "HH:mm")} - ${format(endTime, "HH:mm")}`;
-  };
-
   /**
    * Refetches all data for the current date
    */
-  const refetchAllData = () => {
-    refetchDayNotes();
-    refetchMeetings();
-  };
+  const refetchAllData = useCallback(() => {
+    void refetchDayNotes();
+    void refetchMeetings();
+  }, [refetchDayNotes, refetchMeetings]);
 
   /**
    * Navigates to the previous day and refetches data
@@ -120,7 +111,14 @@ export function FlowingNotesContent() {
     setEditingNoteId(null);
     setSelectedMeetingId(null);
     setSaveFunction(null);
-  }, [currentDate, getContent, noteId, dayNotesData?.content]);
+  }, [
+    currentDate,
+    getContent,
+    noteId,
+    dayNotesData?.content,
+    refetchAllData,
+    setNoteContent,
+  ]);
 
   /**
    * Opens the note editor for a new note
@@ -134,7 +132,7 @@ export function FlowingNotesContent() {
    * Links a note to a meeting
    */
   const handleLinkNoteToMeeting = (noteId: string, meetingId: string) => {
-    linkNoteToMeetingMutation.mutate({
+    void linkNoteToMeetingMutation.mutate({
       noteId,
       meetingId,
     });
@@ -146,7 +144,7 @@ export function FlowingNotesContent() {
   const handleNoteSaved = (
     actionOrStartNewNote?: "delete" | "save" | boolean,
   ) => {
-    refetchDayNotes();
+    void refetchDayNotes();
 
     // Handle boolean parameter (startNewNote)
     if (typeof actionOrStartNewNote === "boolean") {
@@ -167,20 +165,14 @@ export function FlowingNotesContent() {
   /**
    * Closes the editor without saving
    */
-  const handleCloseEditor = () => {
-    setIsAddingNote(false);
-    setEditingNoteId(null);
-    setSelectedMeetingId(null);
-  };
+  // Close editor handler removed as it's currently unused
 
-  // Check if any note is being edited
-  const isEditingAnyNote =
-    isAddingNote || editingNoteId !== null || selectedMeetingId !== null;
+  // Unused editing status check removed
 
   /**
    * Registers a save function for auto-saving
    */
-  const [saveFunction, setSaveFunction] = useState<
+  const [, setSaveFunction] = useState<
     ((content?: string) => Promise<void>) | null
   >(null);
 
@@ -212,8 +204,8 @@ export function FlowingNotesContent() {
     }
 
     // Get the notes array and meetings from the data
-    const notes = dayNotesData?.notes || [];
-    const meetings = meetingsData?.meetings || [];
+    const notes = dayNotesData?.notes ?? [];
+    const meetings = meetingsData?.meetings ?? [];
 
     // Render the timeline view with notes and meetings
     return (
@@ -236,7 +228,7 @@ export function FlowingNotesContent() {
     <div className="container mx-auto h-full overflow-y-auto px-4 py-6">
       <DayHeader
         date={currentDate}
-        onChangeDate={setCurrentDate}
+        _onChangeDate={setCurrentDate}
         onPreviousDay={handlePreviousDay}
         onNextDay={handleNextDay}
         onToday={handleToday}

@@ -13,13 +13,13 @@ import {
 
 interface MagicLinkEmailProps {
   magicLink: string;
-  host: string;
+  _host: string;
 }
 
 /**
  * Email template for sending magic links to users
  */
-const MagicLinkEmail = ({ magicLink, host }: MagicLinkEmailProps) => {
+const MagicLinkEmail = ({ magicLink, _host }: MagicLinkEmailProps) => {
   return (
     <Html>
       <Head />

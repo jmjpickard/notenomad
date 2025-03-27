@@ -16,8 +16,8 @@ type DayHeaderProps = {
   onPreviousDay: () => void;
   onNextDay: () => void;
   onToday: () => void;
-  onChangeDate?: Dispatch<SetStateAction<Date>>;
-  onOpenSidebar?: () => void;
+  _onChangeDate?: Dispatch<SetStateAction<Date>>;
+  _onOpenSidebar?: () => void;
 };
 
 /**
@@ -28,8 +28,8 @@ export function DayHeader({
   onPreviousDay,
   onNextDay,
   onToday,
-  onChangeDate,
-  onOpenSidebar,
+  _onChangeDate,
+  _onOpenSidebar,
 }: DayHeaderProps) {
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E0E0E0] bg-[#F9F9F9] px-6 py-6">

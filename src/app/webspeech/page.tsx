@@ -27,13 +27,17 @@ interface SpeechRecognition extends EventTarget {
   stop: () => void;
   abort: () => void;
   onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: any) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
   onend: () => void;
 }
 
-interface SpeechRecognitionConstructor {
-  new (): SpeechRecognition;
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
 }
+
+// Unused type removed
+
+type SpeechRecognitionConstructor = new () => SpeechRecognition;
 
 declare global {
   interface Window {
@@ -73,9 +77,9 @@ export default function Home() {
         let finalTranscript = "";
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          // Check if the result and its first alternative exist
+          // Check if the result exists and access its first alternative
           const result = event.results[i];
-          if (result && result[0]) {
+          if (result?.[0]) {
             const transcript = result[0].transcript;
             if (result.isFinal) {
               finalTranscript += transcript;
@@ -93,7 +97,7 @@ export default function Home() {
         );
       };
 
-      recognitionRef.current.onerror = (event: any) => {
+      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
         // Handle specific error types
         switch (event.error) {
           case "network":
@@ -180,8 +184,8 @@ export default function Home() {
             Browser Not Supported
           </h1>
           <p className="text-gray-700">
-            Your browser doesn't support the Web Speech API. Please try using
-            Chrome, Edge, or Safari.
+            Your browser doesn&apos;t support the Web Speech API. Please try
+            using Chrome, Edge, or Safari.
           </p>
         </div>
       </div>

@@ -128,7 +128,7 @@ export const authConfig = {
           where: { email },
         })) as UserWithPassword | null;
 
-        if (!user || !user.password) {
+        if (!user?.password) {
           throw new Error("User not found or invalid login method");
         }
 
@@ -156,7 +156,7 @@ export const authConfig = {
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
-    signIn({ user, account, profile, email, credentials }) {
+    signIn({ user, account, profile }) {
       console.log("SignIn callback triggered:", {
         user,
         account: {
@@ -170,7 +170,7 @@ export const authConfig = {
       });
 
       // Store calendar connection if using Google provider
-      if (account && account.provider === "google" && user && user.id) {
+      if (account?.provider === "google" && user?.id) {
         // Non-blocking - we don't want to fail sign-in if calendar setup fails
         handleGoogleAuthForCalendar(user.id, account).catch((error) => {
           console.error("Error configuring calendar during sign-in:", error);

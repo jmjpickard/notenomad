@@ -77,7 +77,7 @@ const SignUpPage = () => {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as { error?: string };
 
       if (!response.ok) {
         setError(data.error || "Something went wrong. Please try again.");
@@ -85,7 +85,7 @@ const SignUpPage = () => {
       }
 
       router.push("/auth/signin");
-    } catch (error) {
+    } catch (err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

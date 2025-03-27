@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import type { PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
@@ -17,7 +17,7 @@ interface BlockNoteEditorProps {
   onFocus?: () => void;
   onBlur?: () => void;
   editable?: boolean;
-  placeholder?: string;
+  _placeholder?: string;
   className?: string;
   theme?: "light" | "dark";
 }
@@ -31,7 +31,7 @@ export const BlockNoteEditor = ({
   onFocus,
   onBlur,
   editable = true,
-  placeholder = "Start typing your notes here...",
+  _placeholder = "Start typing your notes here...",
   className,
   theme = "light",
 }: BlockNoteEditorProps) => {

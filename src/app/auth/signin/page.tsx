@@ -83,7 +83,7 @@ const SignInPage = () => {
       else {
         router.push("/auth/verify-request");
       }
-    } catch (error) {
+    } catch (err) {
       setAuthError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -111,7 +111,7 @@ const SignInPage = () => {
         setAuthError("Invalid email or password");
       }
       // NextAuth will handle redirection to notes
-    } catch (error) {
+    } catch (err) {
       setAuthError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -239,7 +239,7 @@ const SignInPage = () => {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-muted-foreground text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Button
               variant="ghost"
               className="p-0"

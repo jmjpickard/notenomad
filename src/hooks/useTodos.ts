@@ -83,7 +83,7 @@ export function useTodos({ date }: UseTodosOptions) {
     },
     onSettled: () => {
       // Invalidate query to ensure fresh data
-      trpc.todos.getTodosByDate.invalidate({ date: formattedDate });
+      void trpc.todos.getTodosByDate.invalidate({ date: formattedDate });
     },
   });
 
@@ -143,7 +143,7 @@ export function useTodos({ date }: UseTodosOptions) {
     },
     onSettled: () => {
       // Invalidate query to ensure fresh data
-      trpc.todos.getTodosByDate.invalidate({ date: formattedDate });
+      void trpc.todos.getTodosByDate.invalidate({ date: formattedDate });
     },
   });
 
@@ -182,14 +182,14 @@ export function useTodos({ date }: UseTodosOptions) {
     },
     onSettled: () => {
       // Invalidate query to ensure fresh data
-      trpc.todos.getTodosByDate.invalidate({ date: formattedDate });
+      void trpc.todos.getTodosByDate.invalidate({ date: formattedDate });
     },
   });
 
   /**
    * Adds a new todo with the specified content
    */
-  const addTodo = (content: string, persistent: boolean = false) => {
+  const addTodo = (content: string, persistent = false) => {
     if (!content.trim()) return;
 
     createTodoMutation.mutate({

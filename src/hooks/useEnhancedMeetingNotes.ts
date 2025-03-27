@@ -37,7 +37,7 @@ export function useEnhancedMeetingNotes({
         markAsSaved(noteId);
       }
       // Invalidate the query to ensure fresh data
-      trpc.notes.getMeetingNote.invalidate({ meetingId });
+      void trpc.notes.getMeetingNote.invalidate({ meetingId });
     },
     onError: (err) => {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -79,6 +79,7 @@ export function useEnhancedMeetingNotes({
     setNoteContent,
     markAsSaved,
     getMeetingNoteQuery.refetch,
+    getMeetingNoteQuery,
   ]);
 
   /**

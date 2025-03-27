@@ -8,7 +8,7 @@ const getDayNoteSchema = z.object({
   }),
 });
 
-const createDayNoteSchema = z.object({
+const _createDayNoteSchema = z.object({
   date: z.string().refine((value) => !isNaN(new Date(value).getTime()), {
     message: "Invalid date format",
   }),

@@ -29,7 +29,9 @@ export function useDayNotes({ date, initialContent }: UseDayNotesOptions) {
         setContent(data.note.content);
       }
       // Invalidate the query to ensure fresh data
-      trpc.notes.getDayNote.invalidate({ date: format(date, "yyyy-MM-dd") });
+      void trpc.notes.getDayNote.invalidate({
+        date: format(date, "yyyy-MM-dd"),
+      });
     },
     onError: (err) => {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -45,11 +47,11 @@ export function useDayNotes({ date, initialContent }: UseDayNotesOptions) {
     setError(null);
 
     try {
-      const formattedDate = format(date, "yyyy-MM-dd");
+      const _formattedDate = format(date, "yyyy-MM-dd");
       const result = await getDayNoteMutation.refetch();
 
       if (result.error) {
-        throw result.error;
+        throw new Error(result.error.message);
       }
 
       setContent(result.data?.content || null);
@@ -91,7 +93,7 @@ export function useDayNotes({ date, initialContent }: UseDayNotesOptions) {
         // Get the current note ID if available
         const currentNoteId = getDayNoteMutation.data?.notes?.[0]?.id;
 
-        const result = await saveDayNoteMutation.mutateAsync({
+        const _result = await saveDayNoteMutation.mutateAsync({
           date: formattedDate,
           content: validContent,
           noteId: currentNoteId, // Pass the note ID if it exists
@@ -113,7 +115,7 @@ export function useDayNotes({ date, initialContent }: UseDayNotesOptions) {
     if (!initialContent) {
       try {
         // Skip auto-fetch for brand new notes
-        const formattedDate = format(date, "yyyy-MM-dd");
+        const _formattedDate = format(date, "yyyy-MM-dd");
         const result = await getDayNoteMutation.refetch();
 
         // Only set content if we found something - prevents UI reset for new notes

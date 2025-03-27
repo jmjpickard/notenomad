@@ -27,8 +27,9 @@ export default function TranscriptionPage() {
             transcriptions never leave your device, ensuring complete privacy.
           </p>
           <p className="mt-2">
-            To record a video call, click "Record Video Call" and select the
-            browser tab or application window containing your video call.
+            To record a video call, click &quot;Record Video Call&quot; and
+            select the browser tab or application window containing your video
+            call.
           </p>
         </div>
       </div>

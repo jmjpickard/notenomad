@@ -1,11 +1,30 @@
 import { PrismaClient } from "@prisma/client";
+import type { CalendarConnection } from "@prisma/client";
 import { google } from "googleapis";
 
 const prisma = new PrismaClient();
 
+interface CalendarEvent {
+  id: string;
+  externalId: string;
+  calendarId: string;
+  title: string;
+  description?: string | null;
+  startTime: Date;
+  endTime: Date;
+  location?: string | null;
+  attendees?: string | null;
+  organizer?: string | null;
+  isRecurring: boolean;
+}
+
 // Create a simplified version of the GoogleCalendarService
 class GoogleCalendarDebugService {
-  async fetchEvents(connection, startDate, endDate) {
+  async fetchEvents(
+    connection: CalendarConnection,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<CalendarEvent[]> {
     console.log("Fetching events using debug service...");
 
     // Create an OAuth2 client
@@ -61,7 +80,7 @@ class GoogleCalendarDebugService {
   }
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     console.log("Starting debug sync process");
 
@@ -164,9 +183,9 @@ async function main() {
               console.log(`Created new meeting with ID: ${newMeeting.id}`);
             } catch (error) {
               console.error("Error creating meeting:", error);
-              console.error("Error details:", error.message);
-              if (error.meta) {
-                console.error("Error metadata:", error.meta);
+              console.error("Error details:", (error as Error).message);
+              if ((error as any).meta) {
+                console.error("Error metadata:", (error as any).meta);
               }
             }
           }

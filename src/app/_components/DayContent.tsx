@@ -67,7 +67,7 @@ export function DayContent({ date }: DayContentProps) {
 
       {/* Meetings timeline - always full width */}
       <Card className="p-6">
-        <MeetingsTimeline date={date} />
+        <MeetingsTimeline _date={date} />
       </Card>
     </div>
   );

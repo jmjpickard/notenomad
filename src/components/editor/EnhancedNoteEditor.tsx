@@ -29,9 +29,14 @@ export const EnhancedNoteEditor = ({
   onContentChange,
 }: EnhancedNoteEditorProps) => {
   const { setNoteContent, markAsSaved, isDirty, getContent } = useNoteStore();
-  const [isSaving, setIsSaving] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const trpc = api.useUtils();
+
+  // Mutation for saving/adding notes
+  const saveDayNoteMutation = api.notes.saveDayNote.useMutation();
+  const saveMeetingNoteMutation = api.notes.saveMeetingNote.useMutation();
+  const addTimelineNoteMutation = api.notes.addTimelineNote.useMutation();
 
   // Get initial content from store or prop
   const editorContent =
@@ -44,12 +49,6 @@ export const EnhancedNoteEditor = ({
     }
   }, [id, initialContent, setNoteContent, getContent]);
 
-  // tRPC utilities
-  const trpc = api.useUtils();
-  const saveDayNoteMutation = api.notes.saveDayNote.useMutation();
-  const saveMeetingNoteMutation = api.notes.saveMeetingNote.useMutation();
-  const addTimelineNoteMutation = api.notes.addTimelineNote.useMutation();
-
   /**
    * Saves note content to the database via API
    */
@@ -60,7 +59,6 @@ export const EnhancedNoteEditor = ({
     }
 
     try {
-      setIsSaving(true);
       const today = new Date();
       const formattedDate = today.toISOString().split("T")[0];
 
@@ -73,47 +71,44 @@ export const EnhancedNoteEditor = ({
         });
 
         // Invalidate queries to ensure fresh data
-        trpc.notes.getDayNote.invalidate({ date: dateString });
+        void trpc.notes.getDayNote.invalidate({ date: dateString });
       }
       // For meeting notes
       else if (id.startsWith("meeting-")) {
         // Extract the meeting ID, removing any timestamp or additional parts
-        const meetingId = id.replace("meeting-", "").split("-")[0] as string;
-        console.log(`Saving meeting note for ID: ${meetingId}`, {
-          noteContent,
-        });
+        const meetingId = id.replace("meeting-", "").split("-")[0];
 
-        await saveMeetingNoteMutation.mutateAsync({
-          meetingId,
+        void saveMeetingNoteMutation.mutateAsync({
+          meetingId: meetingId!,
           content: noteContent,
         });
 
         // Invalidate queries to ensure fresh data
-        trpc.notes.getMeetingNote.invalidate({ meetingId });
+        void trpc.notes.getMeetingNote.invalidate({ meetingId: meetingId! });
       }
       // For new timeline notes
       else if (id.startsWith("new-note-")) {
         const dateString = id.replace("new-note-", "");
-        await addTimelineNoteMutation.mutateAsync({
+        void addTimelineNoteMutation.mutateAsync({
           date: dateString,
           content: noteContent,
           timeRef: new Date(),
         });
 
         // Invalidate queries to ensure fresh data
-        trpc.notes.getDayNote.invalidate({ date: dateString });
+        void trpc.notes.getDayNote.invalidate({ date: dateString });
       }
       // For existing timeline notes (editing)
       else if (id.startsWith("timeline-note-")) {
         const noteId = id.replace("timeline-note-", "");
-        await saveDayNoteMutation.mutateAsync({
+        void saveDayNoteMutation.mutateAsync({
           date: formattedDate as string,
           content: noteContent,
           noteId,
         });
 
         // Invalidate queries to ensure fresh data
-        trpc.notes.getDayNote.invalidate({ date: formattedDate });
+        void trpc.notes.getDayNote.invalidate({ date: formattedDate });
       }
 
       // Update the store to reflect saved state
@@ -125,8 +120,6 @@ export const EnhancedNoteEditor = ({
       }
     } catch (error) {
       console.error("Failed to save note:", error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -154,7 +147,7 @@ export const EnhancedNoteEditor = ({
       content !== '[{"type":"paragraph","content":[]}]'
     ) {
       saveTimeoutRef.current = setTimeout(() => {
-        saveNote(content);
+        void saveNote(content);
       }, 2000); // 2 second debounce
     }
   };
@@ -167,7 +160,6 @@ export const EnhancedNoteEditor = ({
       }
     };
   }, []);
-  console.log({ editorContent });
 
   return (
     <div className={`w-full ${className || ""}`}>
@@ -180,7 +172,7 @@ export const EnhancedNoteEditor = ({
           // Save on blur if dirty
           if (isDirty(id)) {
             const content = getContent(id);
-            if (content) saveNote(content);
+            if (content) void saveNote(content);
           }
         }}
         theme={theme}

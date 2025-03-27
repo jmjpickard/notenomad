@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { auth } from "~/lib/auth";
 import { cookies, headers } from "next/headers";
 import { getToken } from "next-auth/jwt";
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Collect cookies for debugging
-    const cookieList = cookies();
+    const cookieList = await cookies();
     const allCookies = cookieList.getAll();
     const authCookies = allCookies.filter(
       (cookie) =>
@@ -27,9 +28,12 @@ export async function GET(req: NextRequest) {
     const authEnvVars = {
       AUTH_SECRET: env.AUTH_SECRET ? "Set (value hidden)" : "Not set",
       AUTH_URL: env.AUTH_URL,
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL || "Not set",
-      NODE_ENV: process.env.NODE_ENV || "Not set",
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? "Not set",
+      NODE_ENV: process.env.NODE_ENV ?? "Not set",
     };
+
+    // Get headers
+    const headersList = await headers();
 
     return NextResponse.json({
       isAuthenticated: !!session,
@@ -48,7 +52,7 @@ export async function GET(req: NextRequest) {
         value: "REDACTED",
       })),
       authEnvVars,
-      headersList: Object.fromEntries([...headers()]),
+      headersList: Object.fromEntries([...headersList]),
       requestInfo: {
         url: req.url,
         method: req.method,

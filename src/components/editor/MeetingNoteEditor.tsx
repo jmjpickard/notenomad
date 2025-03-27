@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { toast } from "sonner";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { BlockNoteEditor } from "./BlockNoteEditor";
 import { useMeetingNotes } from "~/hooks/useMeetingNotes";
@@ -35,6 +34,7 @@ export const MeetingNoteEditor = ({
   const theme = resolvedTheme === "dark" ? "dark" : "light";
   const [isInitialized, setIsInitialized] = useState(false);
   const currentContentRef = useRef<string>(initialContent || "[]");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use the meeting notes hook for database integration
   const { content, isLoading, saveNote, initializeNote } = useMeetingNotes({
@@ -54,7 +54,7 @@ export const MeetingNoteEditor = ({
     };
 
     if (!isInitialized) {
-      initialize();
+      void initialize();
     }
   }, [isInitialized, initializeNote]);
 
@@ -85,22 +85,58 @@ export const MeetingNoteEditor = ({
       return Promise.resolve();
     } catch (error) {
       console.error("Failed to save meeting note:", error);
-      return Promise.reject(error);
+      return Promise.reject(new Error(String(error)));
     }
   };
+
+  // Define the save function with useCallback to avoid dependency issues
+  const saveFunction = useCallback(
+    async (explicitContent?: string) => {
+      if (explicitContent) {
+        return handleSave(explicitContent);
+      }
+      // Use the tracked content reference instead of localStorage
+      return saveNote(currentContentRef.current);
+    },
+    [handleSave, saveNote]
+  );
 
   // Register the save function if provided
   useEffect(() => {
     if (registerSaveFunction && !isLoading) {
-      registerSaveFunction(async (explicitContent?: string) => {
-        if (explicitContent) {
-          return handleSave(explicitContent);
-        }
-        // Use the tracked content reference instead of localStorage
-        return saveNote(currentContentRef.current);
-      });
+      registerSaveFunction(saveFunction);
     }
-  }, [registerSaveFunction, isLoading, saveNote]);
+  }, [registerSaveFunction, isLoading, saveFunction]);
+
+  // Handle content changes with debounced auto-save
+  const handleContentChange = (noteContent: string) => {
+    // Update the current content reference
+    currentContentRef.current = noteContent;
+
+    // Call the parent's onContentChange callback if provided
+    if (onContentChange) {
+      onContentChange();
+    }
+
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set a new timeout for auto-saving
+    saveTimeoutRef.current = setTimeout(() => {
+      void handleSave(noteContent);
+    }, 1000);
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -114,11 +150,9 @@ export const MeetingNoteEditor = ({
     <div className={className}>
       <BlockNoteEditor
         initialContent={content || undefined}
-        onSave={handleSave}
-        autoSaveInterval={1000}
+        onContentChange={handleContentChange}
         className="min-h-[300px]"
         theme={theme}
-        onContentChange={onContentChange}
       />
     </div>
   );

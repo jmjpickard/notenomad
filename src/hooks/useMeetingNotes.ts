@@ -31,7 +31,7 @@ export function useMeetingNotes({
         setContent(data.note.content);
       }
       // Invalidate the query to ensure fresh data
-      trpc.notes.getMeetingNote.invalidate({ meetingId });
+      void trpc.notes.getMeetingNote.invalidate({ meetingId });
     },
     onError: (err) => {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -50,7 +50,7 @@ export function useMeetingNotes({
       const result = await getMeetingNoteMutation.refetch();
 
       if (result.error) {
-        throw result.error;
+        throw new Error(result.error.message);
       }
 
       setContent(result.data?.content || null);
@@ -60,7 +60,7 @@ export function useMeetingNotes({
     } finally {
       setIsLoading(false);
     }
-  }, [meetingId, getMeetingNoteMutation]);
+  }, [getMeetingNoteMutation]);
 
   /**
    * Saves the note content for the given meeting

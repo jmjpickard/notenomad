@@ -50,7 +50,9 @@ export class GoogleCalendarService implements CalendarService {
         },
         update: {
           accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token,
+          ...(tokens.refresh_token
+            ? { refreshToken: tokens.refresh_token }
+            : {}),
           tokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
           isActive: true,
           lastSynced: new Date(),
@@ -86,14 +88,15 @@ export class GoogleCalendarService implements CalendarService {
         refresh_token: connection.refreshToken,
       });
 
-      const { tokens } = await oauth2Client.refreshAccessToken();
+      const response = await oauth2Client.refreshAccessToken();
+      const { access_token, expiry_date } = response.credentials;
 
       // Update the token in the database
       const updatedConnection = await db.calendarConnection.update({
         where: { id: connection.id },
         data: {
-          accessToken: tokens.access_token,
-          tokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+          accessToken: access_token,
+          tokenExpiry: expiry_date ? new Date(expiry_date) : null,
         },
       });
 
@@ -145,10 +148,10 @@ export class GoogleCalendarService implements CalendarService {
           externalId: event.id || "",
           calendarId: connection.calendarId || "primary",
           title: event.summary || "Untitled Event",
-          description: event.description,
+          description: event.description || undefined,
           startTime: new Date(event.start?.dateTime || event.start?.date || ""),
           endTime: new Date(event.end?.dateTime || event.end?.date || ""),
-          location: event.location,
+          location: event.location || undefined,
           attendees: event.attendees
             ? JSON.stringify(event.attendees)
             : undefined,
@@ -216,10 +219,10 @@ export class GoogleCalendarService implements CalendarService {
         externalId: event.id || "",
         calendarId: connection.calendarId || "primary",
         title: event.summary || "Untitled Event",
-        description: event.description,
+        description: event.description || undefined,
         startTime: new Date(event.start?.dateTime || event.start?.date || ""),
         endTime: new Date(event.end?.dateTime || event.end?.date || ""),
-        location: event.location,
+        location: event.location || undefined,
         attendees: event.attendees
           ? JSON.stringify(event.attendees)
           : undefined,
@@ -288,10 +291,10 @@ export class GoogleCalendarService implements CalendarService {
         externalId: event.id || "",
         calendarId: connection.calendarId || "primary",
         title: event.summary || "Untitled Event",
-        description: event.description,
+        description: event.description || undefined,
         startTime: new Date(event.start?.dateTime || event.start?.date || ""),
         endTime: new Date(event.end?.dateTime || event.end?.date || ""),
-        location: event.location,
+        location: event.location || undefined,
         attendees: event.attendees
           ? JSON.stringify(event.attendees)
           : undefined,

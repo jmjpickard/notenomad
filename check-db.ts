@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-async function main() {
+async function main(): Promise<void> {
   console.log("Checking calendar connections...");
   const connections = await prisma.calendarConnection.findMany();
   console.log(JSON.stringify(connections, null, 2));

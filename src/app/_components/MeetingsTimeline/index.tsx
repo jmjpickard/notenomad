@@ -4,13 +4,13 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 type MeetingsTimelineProps = {
-  date: Date;
+  _date: Date;
 };
 
 /**
  * Displays a placeholder for the day's meetings in chronological order
  */
-export function MeetingsTimeline({ date }: MeetingsTimelineProps) {
+export function MeetingsTimeline({ _date }: MeetingsTimelineProps) {
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">

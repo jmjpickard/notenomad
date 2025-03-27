@@ -15,7 +15,7 @@ const registerSchema = z.object({
  */
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body: unknown = await req.json();
 
     const result = registerSchema.safeParse(body);
     if (!result.success) {
@@ -52,7 +52,8 @@ export async function POST(req: Request) {
     });
 
     // Remove password from the response
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
 
     return NextResponse.json(
       { user: userWithoutPassword, message: "User created successfully" },

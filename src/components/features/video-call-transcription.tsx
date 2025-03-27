@@ -7,15 +7,30 @@ import { Button } from "~/components/ui/button";
 // Configure Transformers.js environment
 env.allowLocalModels = false;
 // Configure ONNX runtime if available
-if (env.backends && env.backends.onnx && env.backends.onnx.wasm) {
+if (env?.backends?.onnx?.wasm) {
   env.backends.onnx.wasm.numThreads = 1;
 }
+
+// Define a safer type for the Whisper pipeline
+interface TranscriptionResult {
+  text: string;
+}
+
+interface TranscriberMethods {
+  __call__?: (audioData: Float32Array) => Promise<TranscriptionResult>;
+  call?: (audioData: Float32Array) => Promise<TranscriptionResult>;
+  generate?: (audioData: Float32Array) => Promise<TranscriptionResult>;
+  process?: (audioData: Float32Array) => Promise<TranscriptionResult>;
+  transcribe?: (audioData: Float32Array) => Promise<TranscriptionResult>;
+}
+
+// Removing unused type
 
 /**
  * Component for real-time transcription of video call audio with screen capture
  */
 export function VideoCallTranscription() {
-  const [transcriber, setTranscriber] = useState<any>(null);
+  const [transcriber, setTranscriber] = useState<unknown>(null);
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [transcription, setTranscription] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -27,6 +42,21 @@ export function VideoCallTranscription() {
   const audioChunksRef = useRef<Blob[]>([]);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const modelLoadAttemptedRef = useRef(false);
+
+  /**
+   * Stops screen capturing
+   */
+  const stopScreenCapture = () => {
+    if (screenMediaRecorderRef.current && isScreenCapturing) {
+      screenMediaRecorderRef.current.stop();
+    }
+
+    // Also clean up any screen stream that might be active
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current = null;
+    }
+  };
 
   /**
    * Loads the transcription model when the component mounts
@@ -48,17 +78,17 @@ export function VideoCallTranscription() {
           "Xenova/whisper-tiny.en",
         );
 
-        console.log("Whisper Pipeline loaded:", whisperPipeline);
-        console.log("Pipeline type:", typeof whisperPipeline);
-        // Safely access methods
-        console.log(
-          "Pipeline methods:",
-          Object.getOwnPropertyNames(whisperPipeline || {}).filter(
-            (prop) =>
-              typeof (whisperPipeline as Record<string, any>)[prop] ===
-              "function",
-          ),
+        // When examining the object properties, safely handle it
+        const methods = Object.getOwnPropertyNames(
+          Object(whisperPipeline),
+        ).filter(
+          (prop) =>
+            typeof (Object(whisperPipeline) as Record<string, unknown>)[
+              prop
+            ] === "function",
         );
+
+        console.log("Whisper Pipeline methods:", methods);
 
         if (isMounted) {
           setTranscriber(whisperPipeline);
@@ -77,7 +107,7 @@ export function VideoCallTranscription() {
 
     // Use setTimeout to defer model loading slightly after component mount
     const timer = setTimeout(() => {
-      loadModel();
+      void loadModel();
     }, 1500); // Increased timeout further to ensure DOM is fully loaded
 
     return () => {
@@ -85,7 +115,7 @@ export function VideoCallTranscription() {
       clearTimeout(timer);
       stopScreenCapture();
     };
-  }, []);
+  }, [stopScreenCapture]);
 
   /**
    * Starts screen capture including audio for a video call
@@ -130,7 +160,6 @@ export function VideoCallTranscription() {
           const screenSource =
             audioContext.createMediaStreamSource(screenAudioStream);
           screenSource.connect(dest);
-          console.log("Connected screen audio to audio context");
         }
       }
 
@@ -149,9 +178,6 @@ export function VideoCallTranscription() {
           gainNode.gain.value = 1.5; // Boost mic volume
           micSource.connect(gainNode);
           gainNode.connect(dest);
-          console.log(
-            "Connected microphone audio to audio context with gain boost",
-          );
         }
       }
 
@@ -177,14 +203,12 @@ export function VideoCallTranscription() {
       mediaRecorder.addEventListener("dataavailable", (event) => {
         if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
-          console.log("Received data chunk, size:", event.data.size);
         }
       });
 
       // Handle recording stop
       mediaRecorder.addEventListener("stop", () => {
         setIsScreenCapturing(false);
-        console.log("Recording stopped");
 
         try {
           if (audioChunksRef.current.length === 0) {
@@ -195,10 +219,9 @@ export function VideoCallTranscription() {
           const videoBlob = new Blob(audioChunksRef.current, {
             type: "video/webm",
           });
-          console.log("Created video blob, size:", videoBlob.size);
 
           // Extract audio from video for transcription
-          extractAudioAndTranscribe(videoBlob);
+          void extractAudioAndTranscribe(videoBlob);
         } catch (error) {
           console.error("Video processing error:", error);
           setErrorMessage("Error processing video. Please try again.");
@@ -214,13 +237,12 @@ export function VideoCallTranscription() {
           micStream.getTracks().forEach((track) => track.stop());
 
           // Close audio context
-          audioContext.close();
+          void audioContext.close();
         }
       });
 
       // Start recording
       mediaRecorder.start(1000);
-      console.log("Started recording with mixed audio");
     } catch (error) {
       console.error("Error starting screen capture:", error);
       setIsScreenCapturing(false);
@@ -278,7 +300,7 @@ export function VideoCallTranscription() {
 
         // Start transcription
         if (transcriber) {
-          transcribeAudio(audioBlob);
+          void transcribeAudio(audioBlob);
         } else {
           setErrorMessage(
             "Transcription model is not ready. Please try again later.",
@@ -289,17 +311,16 @@ export function VideoCallTranscription() {
       // Start playing the video to extract audio
       audioElement.oncanplay = () => {
         audioRecorder.start(1000); // Collect data every second
-        audioElement.play();
+        void audioElement.play();
       };
 
       audioElement.onended = () => {
         audioRecorder.stop();
-        audioContext.close();
+        void audioContext.close();
         URL.revokeObjectURL(videoURL);
       };
 
-      audioElement.onerror = (e) => {
-        console.error("Audio element error:", e);
+      audioElement.onerror = () => {
         setErrorMessage("Error playing the recorded video for processing.");
         URL.revokeObjectURL(videoURL);
       };
@@ -350,97 +371,89 @@ export function VideoCallTranscription() {
       setIsTranscribing(true);
 
       // Convert audio to proper format (Float32Array)
-      console.log("Converting audio to Float32Array format...");
       const audioData = await convertAudioToFloat32(audioBlob);
-      console.log("Audio converted, length:", audioData.length);
 
-      // Log detailed information about the transcriber object
-      console.log("Attempting transcription with transcriber:", transcriber);
-      console.log("Transcriber constructor:", transcriber?.constructor?.name);
-      // Safely access methods
-      console.log(
-        "Available methods:",
-        Object.getOwnPropertyNames(transcriber || {}).filter(
-          (prop) =>
-            typeof (transcriber as Record<string, any>)[prop] === "function",
-        ),
-      );
+      // Try different approaches to call the transcriber
+      let result: TranscriptionResult | { text: string }[] | string | undefined;
+      const trans = transcriber as unknown;
 
-      // Use a very simple approach to call the transcriber
-      let result;
-
-      // If the transcriber has an __call__ method (Python-style callable objects)
-      if (transcriber && typeof (transcriber as any).__call__ === "function") {
-        result = await (transcriber as any).__call__(audioData);
-      }
-      // Standard function call if it's a function
-      else if (typeof transcriber === "function") {
-        result = await transcriber(audioData);
-      }
-      // Try to use the pipeline directly
-      else {
-        // Attempt direct method calls first
-        if (
-          transcriber &&
-          typeof (transcriber as any).generate === "function"
-        ) {
-          result = await (transcriber as any).generate(audioData);
-        } else if (
-          transcriber &&
-          typeof (transcriber as any).process === "function"
-        ) {
-          result = await (transcriber as any).process(audioData);
-        } else if (
-          transcriber &&
-          typeof (transcriber as any).transcribe === "function"
-        ) {
-          result = await (transcriber as any).transcribe(audioData);
-        } else if (
-          transcriber &&
-          typeof (transcriber as any).call === "function"
-        ) {
-          result = await (transcriber as any).call(audioData);
-        }
+      // Prioritize methods in likely order of existence
+      if (typeof trans === "function") {
+        // Directly callable as a function
+        result = await (
+          trans as (data: Float32Array) => Promise<TranscriptionResult>
+        )(audioData);
+      } else if (typeof (trans as TranscriberMethods).__call__ === "function") {
+        // Python-style callable
+        result = await (trans as TranscriberMethods).__call__!(audioData);
+      } else if (typeof (trans as TranscriberMethods).call === "function") {
+        // Standard method call
+        result = await (trans as TranscriberMethods).call!(audioData);
+      } else if (
+        typeof (trans as TranscriberMethods).transcribe === "function"
+      ) {
+        // Specific method for transcription
+        result = await (trans as TranscriberMethods).transcribe!(audioData);
+      } else if (typeof (trans as TranscriberMethods).process === "function") {
+        // Generic process method
+        result = await (trans as TranscriberMethods).process!(audioData);
+      } else if (typeof (trans as TranscriberMethods).generate === "function") {
+        // Generate method
+        result = await (trans as TranscriberMethods).generate!(audioData);
+      } else {
         // Last resort - recreate the pipeline
-        else {
-          console.log("Using fallback pipeline creation method");
-          try {
-            // Re-create the pipeline for this specific call
-            const tempPipeline = await pipeline(
-              "automatic-speech-recognition",
-              "Xenova/whisper-tiny.en",
-            );
+        try {
+          // Re-create the pipeline for this specific call
+          const tempPipeline = await pipeline(
+            "automatic-speech-recognition",
+            "Xenova/whisper-tiny.en",
+          );
 
-            // Try to use the newly created pipeline
-            if (typeof tempPipeline === "function") {
-              result = await tempPipeline(audioData);
-            } else if (
-              tempPipeline &&
-              typeof (tempPipeline as any).call === "function"
-            ) {
-              result = await (tempPipeline as any).call(audioData);
-            } else {
-              throw new Error("Could not create a usable pipeline");
-            }
-          } catch (error) {
-            console.error("Error using fallback pipeline:", error);
-            throw error;
+          // Try to use the newly created pipeline
+          if (typeof tempPipeline === "function") {
+            result = await (
+              tempPipeline as (
+                data: Float32Array,
+              ) => Promise<TranscriptionResult>
+            )(audioData);
+          } else if (
+            typeof (tempPipeline as TranscriberMethods).call === "function"
+          ) {
+            result = await (tempPipeline as TranscriberMethods).call!(
+              audioData,
+            );
+          } else {
+            throw new Error("Could not create a usable pipeline");
           }
+        } catch (err) {
+          throw new Error(`Error using fallback pipeline: ${String(err)}`);
         }
       }
 
       // Handle different result formats
-      if (result && typeof result.text === "string") {
+      if (
+        result &&
+        typeof result === "object" &&
+        "text" in result &&
+        typeof result.text === "string"
+      ) {
         setTranscription(result.text);
       } else if (result && Array.isArray(result) && result.length > 0) {
         // Handle the case where result might be an array of chunks
-        setTranscription(result.map((chunk) => chunk.text || "").join(" "));
+        const text = result
+          .map((chunk) =>
+            typeof chunk === "object" && "text" in chunk
+              ? String(chunk.text)
+              : "",
+          )
+          .filter(Boolean)
+          .join(" ");
+        setTranscription(text);
       } else if (typeof result === "string") {
         // Handle the case where result might be directly a string
         setTranscription(result);
       } else {
-        console.error("Unexpected result format:", result);
-        throw new Error("Invalid transcription result");
+        throw new Error("Invalid transcription result format");
       }
     } catch (error) {
       console.error("Transcription error:", error);
@@ -450,15 +463,6 @@ export function VideoCallTranscription() {
       setErrorMessage(`Error during transcription: ${errorMessage}`);
     } finally {
       setIsTranscribing(false);
-    }
-  };
-
-  /**
-   * Stops screen capturing
-   */
-  const stopScreenCapture = () => {
-    if (screenMediaRecorderRef.current && isScreenCapturing) {
-      screenMediaRecorderRef.current.stop();
     }
   };
 

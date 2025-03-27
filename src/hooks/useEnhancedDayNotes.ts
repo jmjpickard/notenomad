@@ -37,7 +37,7 @@ export function useEnhancedDayNotes({ date }: UseEnhancedDayNotesOptions) {
         markAsSaved(noteId);
       }
       // Invalidate the query to ensure fresh data
-      trpc.notes.getDayNote.invalidate({ date: formattedDate });
+      void trpc.notes.getDayNote.invalidate({ date: formattedDate });
     },
     onError: (err) => {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -79,6 +79,7 @@ export function useEnhancedDayNotes({ date }: UseEnhancedDayNotesOptions) {
     setNoteContent,
     markAsSaved,
     getDayNoteQuery.refetch,
+    getDayNoteQuery,
   ]);
 
   /**
