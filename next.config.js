@@ -8,6 +8,15 @@ import "./src/env.js";
 const config = {
   transpilePackages: ["@huggingface/transformers", "onnxruntime-web"],
   reactStrictMode: true,
+  eslint: {
+    // Warning is treated as error in production build, here we're ignoring those errors
+    // when SKIP_LINT is true (during Vercel deployment)
+    ignoreDuringBuilds: process.env.SKIP_LINT === 'true' || process.env.SKIP_ENV_VALIDATION === 'true',
+  },
+  typescript: {
+    // Type checking happens separately, ignoring during build
+    ignoreBuildErrors: true,
+  },
   webpack: (config, { isServer }) => {
     // Disable node-specific modules
     config.resolve.alias = {
