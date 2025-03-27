@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { Loader2, Mic, StopCircle, Keyboard } from "lucide-react";
 import { toast } from "sonner";
-import { pipeline } from "@huggingface/transformers";
 import { Textarea } from "~/components/ui/textarea";
 
 interface MeetingTranscriptionProps {
@@ -101,6 +100,8 @@ export const MeetingTranscription = ({
 
           try {
             console.log("Loading transformers.js model for Arc browser...");
+            // Dynamically import the pipeline
+            const { pipeline } = await import("@huggingface/transformers");
             // Load the Whisper model for transcription
             const whisperPipeline = await pipeline(
               "automatic-speech-recognition",
@@ -152,6 +153,8 @@ export const MeetingTranscription = ({
             console.log(
               "Loading transformers.js model as fallback or primary method...",
             );
+            // Dynamically import the pipeline
+            const { pipeline } = await import("@huggingface/transformers");
             // Load the Whisper model for transcription
             const whisperPipeline = await pipeline(
               "automatic-speech-recognition",
@@ -601,6 +604,8 @@ export const MeetingTranscription = ({
       // Load the Whisper model if not already loaded
       if (!transcriber) {
         console.log("Loading transformers.js model...");
+        const { pipeline } = await import("@huggingface/transformers");
+        // Load the Whisper model for transcription
         const whisperPipeline = await pipeline(
           "automatic-speech-recognition",
           "Xenova/whisper-tiny.en",
@@ -1244,6 +1249,8 @@ export const MeetingTranscription = ({
         console.log(
           "Transcriber not available, loading transformers.js model...",
         );
+        const { pipeline } = await import("@huggingface/transformers");
+        // Load the Whisper model for transcription
         const whisperPipeline = await pipeline(
           "automatic-speech-recognition",
           "Xenova/whisper-tiny.en",

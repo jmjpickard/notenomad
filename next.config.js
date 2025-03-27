@@ -12,6 +12,19 @@ const config = {
     // Type checking happens separately during the lint step
     ignoreBuildErrors: false,
   },
+  // Add this section to optimize output size
+  output: "standalone",
+  experimental: {
+    // Add proper serverComponentsExternalPackages to exclude large dependencies from server bundle
+    serverComponentsExternalPackages: [
+      "onnxruntime-node",
+      "@huggingface/transformers",
+    ],
+    // Optimize server build
+    serverMinification: true,
+    // Pack related packages together
+    optimizePackageImports: ["@huggingface/transformers", "onnxruntime-web"],
+  },
   webpack: (config, { isServer }) => {
     // Disable node-specific modules
     config.resolve.alias = {
@@ -55,8 +68,6 @@ const config = {
 
     return config;
   },
-  // Add this section to optimize output size
-  output: "standalone",
 };
 
 export default config;
