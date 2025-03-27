@@ -64,7 +64,8 @@ export const MeetingTranscription = ({
   const [micPermissionGranted, setMicPermissionGranted] = useState(false);
   const isArcBrowser = useRef(
     navigator.userAgent.includes("Arc") ||
-      (navigator.userAgent.includes("Chrome") && navigator.userAgent.includes("Apple")),
+      (navigator.userAgent.includes("Chrome") &&
+        navigator.userAgent.includes("Apple")),
   );
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [isMicrophoneTesting, setIsMicrophoneTesting] = useState(false);
@@ -1575,11 +1576,11 @@ export const MeetingTranscription = ({
             </div>
             <div className="mt-3 rounded border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
               <p className="mb-2 font-medium">
-                If permission dialog doesn't appear:
+                If permission dialog doesn&apos;t appear:
               </p>
               <ol className="ml-4 list-decimal space-y-1 text-[#607D8B] dark:text-slate-400">
                 <li>Click the lock icon or microphone icon in the URL bar</li>
-                <li>Toggle permission to "Allow" for this site</li>
+                <li>Toggle permission to &apos;Allow&apos; for this site</li>
                 <li>Refresh the page and try again</li>
               </ol>
             </div>
@@ -1595,8 +1596,8 @@ export const MeetingTranscription = ({
               Microphone Not Working
             </h3>
             <p className="mb-3 text-amber-700 dark:text-amber-500">
-              We couldn't detect any audio from your microphone. The microphone
-              may be muted or not properly connected.
+              We couldn&apos;t detect any audio from your microphone. The
+              microphone may be muted or not properly connected.
             </p>
             <div className="flex flex-col gap-3">
               <Button
@@ -1745,7 +1746,8 @@ export const MeetingTranscription = ({
               </p>
               <ul className="list-disc pl-5 text-[#607D8B] dark:text-slate-400">
                 <li>
-                  Make sure to enable &quot;Share audio&quot; in the screen sharing dialog
+                  Make sure to enable &quot;Share audio&quot; in the screen
+                  sharing dialog
                 </li>
                 <li>Speak clearly into your microphone</li>
                 <li>Click &quot;Stop Recording&quot; when finished</li>
@@ -1759,7 +1761,7 @@ export const MeetingTranscription = ({
                   Arc Browser: Using transformers.js for optimal compatibility
                 </p>
                 <p className="text-[#607D8B] dark:text-slate-400">
-                  For Arc browser, we're using an optimized offline
+                  For Arc browser, we&apos;re using an optimized offline
                   transcription method. The transcription will process when you
                   stop recording.
                 </p>
@@ -1774,7 +1776,8 @@ export const MeetingTranscription = ({
                 </p>
                 <ul className="list-disc pl-5 text-[#607D8B] dark:text-slate-400">
                   <li>
-                    Ensure &apos;Share system audio&apos; is checked in the sharing dialog
+                    Ensure &apos;Share system audio&apos; is checked in the
+                    sharing dialog
                   </li>
                   <li>Play some audio on your device to test detection</li>
                   <li>Check that your microphone is not muted</li>
@@ -1846,7 +1849,7 @@ export const MeetingTranscription = ({
                   </h3>
                   <div className="mt-1 text-sm text-amber-700 dark:text-amber-500">
                     <p>
-                      Audio transcription couldn't be completed. You can
+                      Audio transcription couldn&apos;t be completed. You can
                       manually enter your transcription below.
                     </p>
                   </div>
